@@ -33,5 +33,37 @@ def delete_key(key):
     response = requests.delete(f"{node}/delete/{key}")
     return jsonify(response.json())
 
+@app.route('/add_node', methods=['POST'])
+def add_node():
+    """
+    Add a new node to the consistent hashing ring.
+    Example payload: { "node": "http://127.0.0.1:5003" }
+    """
+    data = request.json
+    node = data.get('node')
+
+    if not node:
+        return jsonify({"error": "Node is required!"}), 400
+
+    ch.add_node(node)
+    return jsonify({"message": f"Node {node} added successfully."})
+
+
+@app.route('/remove_node', methods=['POST'])
+def remove_node():
+    """
+    Remove a node from the consistent hashing ring.
+    Example payload: { "node": "http://127.0.0.1:5003" }
+    """
+    data = request.json
+    node = data.get('node')
+
+    if not node:
+        return jsonify({"error": "Node is required!"}), 400
+
+    ch.remove_node(node)
+    return jsonify({"message": f"Node {node} removed successfully."})
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=4000)
