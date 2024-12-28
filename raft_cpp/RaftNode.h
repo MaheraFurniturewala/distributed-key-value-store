@@ -50,6 +50,11 @@ public:
 
     // Utility
     void logState();
+
+    // Leader Responsibilities
+    void sendHeartbeats();
+    void appendEntry(const string& command); // Append a log entry and replicate it to followers
+    bool handleAppendEntries(int term, const string& command); // Handle incoming AppendEntries
 };
 
 #endif
