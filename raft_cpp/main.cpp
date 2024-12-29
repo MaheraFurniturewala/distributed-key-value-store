@@ -3,13 +3,17 @@
 int main() {
     const int totalNodes = 3;
 
+    // Create a node
     RaftNode node1(1, totalNodes);
-    RaftNode node2(2, totalNodes);
-    RaftNode node3(3, totalNodes);
 
-    node1.becomeLeader();
-    node1.sendHeartbeats();
-    node1.appendEntry("SET key1 value1");
+    // Simulate an election
+    node1.startElection();
+
+    // Save state
+    node1.saveState();
+
+    // Restart the node
+    RaftNode restartedNode(1, totalNodes);
 
     return 0;
 }

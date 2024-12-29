@@ -32,6 +32,8 @@ private:
     vector<string> logEntries; // Log of commands replicated on this node
     int totalNodes;          // Total number of nodes in the cluster
 
+    string stateFile;        // File for persistent state
+
     mutex mtx;               // Mutex to protect shared state
     condition_variable cv;   // Condition variable for state changes
 
@@ -51,10 +53,13 @@ public:
     // Utility
     void logState();
 
-    // Leader Responsibilities
     void sendHeartbeats();
     void appendEntry(const string& command); // Append a log entry and replicate it to followers
     bool handleAppendEntries(int term, const string& command); // Handle incoming AppendEntries
+
+    // Persistent state helper functions
+    void saveState();        // Save persistent state to disk
+    void loadState();        // Load persistent state from disk
 };
 
 #endif

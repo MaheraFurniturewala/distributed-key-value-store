@@ -1,7 +1,12 @@
 #include "RaftNode.h"
+#include <fstream>
 
-RaftNode::RaftNode(int id, int totalNodes) 
-    : nodeID(id), currentState(FOLLOWER), currentTerm(0), votedFor(-1), totalNodes(totalNodes) {}
+
+RaftNode::RaftNode(int id, int totalNodes)
+    : nodeID(id), currentState(FOLLOWER), currentTerm(0), votedFor(-1), totalNodes(totalNodes) {
+    stateFile = "node_" + to_string(nodeID) + "_state.dat";
+    loadState();
+}
 
 void RaftNode::startElection() {
     unique_lock<mutex> lock(mtx);
@@ -127,4 +132,54 @@ bool RaftNode::handleAppendEntries(int term, const string& command) {
 
     cout << "Node " << nodeID << " leaving handleAppendEntries." << endl;
     return true;
+}
+
+
+// Save persistent state to disk
+void RaftNode::saveState() {
+    unique_lock<mutex> lock(mtx);
+    ofstream out(stateFile, ios::binary);
+
+    if (out.is_open()) {
+        out << currentTerm << endl;
+        out << votedFor << endl;
+
+        // Save log entries
+        out << logEntries.size() << endl;
+        for (const string& entry : logEntries) {
+            out << entry << endl;
+        }
+        out.close();
+        cout << "Node " << nodeID << " saved state to disk." << endl;
+    } else {
+        cerr << "Node " << nodeID << " failed to save state!" << endl;
+    }
+}
+
+// Load persistent state from disk
+void RaftNode::loadState() {
+    unique_lock<mutex> lock(mtx);
+    ifstream in(stateFile, ios::binary);
+
+    if (in.is_open()) {
+        in >> currentTerm;
+        in >> votedFor;
+
+        // Load log entries
+        size_t logSize;
+        in >> logSize;
+        logEntries.clear();
+        for (size_t i = 0; i < logSize; ++i) {
+            string entry;
+            in >> entry;
+            logEntries.push_back(entry);
+        }
+        in.close();
+        cout << "Node " << nodeID << " loaded state from disk." << endl;
+    } else {
+        cout << "Node " << nodeID << " has no saved state, starting fresh." << endl;
+        currentTerm = 0;
+        votedFor = -1;
+        logEntries.clear();
+    }
 }
